@@ -1,0 +1,39 @@
+{
+  "path": "C:\\dev\\Acme.Shop",
+  "msg": "2 revisions loaded.",
+  "err": false,
+  "loading": false,
+  "canMore": false,
+  "sel": 124,
+  "entries": [
+    {
+      "rev": 124,
+      "author": "lbianchi",
+      "date": "2026-11-10T17:42:00.000Z",
+      "msg": "Fix VAT rounding in the order summary",
+      "paths": [
+        {
+          "a": "M",
+          "p": "/trunk/Core/Services/OrderService.cs"
+        }
+      ]
+    },
+    {
+      "rev": 123,
+      "author": "mrossi",
+      "date": "2026-11-09T11:05:00.000Z",
+      "msg": "Log payment requests",
+      "paths": [
+        {
+          "a": "M",
+          "p": "/trunk/Core/Services/PaymentGateway.cs"
+        },
+        {
+          "a": "To",
+          "p": "/trunk/Core/Logging/PaymentLog.cs"
+        }
+      ]
+    }
+  ],
+  "diff": "Index: Core/Services/OrderService.cs\n===================================================================\n--- Core/Services/OrderService.cs\t(revision 123)\n+++ Core/Services/OrderService.cs\t(revision 124)\n@@ -1,1 +1,1 @@\n-return Math.Round(total, 1);\n+return Math.Round(total, 2, MidpointRounding.AwayFromZero);\n"
+}

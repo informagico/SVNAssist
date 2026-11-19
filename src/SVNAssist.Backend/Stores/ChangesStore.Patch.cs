@@ -349,7 +349,7 @@ internal sealed partial class ChangesStore
         {
             var file = ShelveFiles.PathOf(WorkingCopyPath, id);
             var name = ShelveFiles.List(WorkingCopyPath).FirstOrDefault(s => s.Id == id)?.Name ?? id;
-            if (!await _dialogs.ConfirmAsync(Loc.T("Eliminare lo shelve \"{0}\"?\n\nIl file .patch viene cancellato e non si recupera.", name), ct))
+            if (!await _dialogs.ConfirmAsync(Loc.T("Eliminare lo shelve \"{0}\"?\n\nIl file .patch viene cancellato e non si recupera.", name), Loc.T("Elimina"), ct))
                 return;
             File.Delete(file);
             await RefreshAsync(ct, reloadBranch: false, Loc.T("Shelve eliminato: {0}.", name));

@@ -99,7 +99,8 @@ internal sealed class PathCommands
 
     private Task InfoAsync(string message) => _host.PromptAsync(message, ["OK"]);
 
-    private async Task<bool> ConfirmAsync(string message) => await _host.PromptAsync(message, ["OK", Loc.T("Annulla")]) == 0;
+    private async Task<bool> ConfirmAsync(string message, string? actionLabel = null)
+        => await _host.PromptAsync(message, [actionLabel ?? "OK", Loc.T("Annulla")]) == 0;
 
     private Task UpdateAsync(List<SvnTarget> targets, CancellationToken ct) => UpdateAsync(targets, null, ct);
 
@@ -214,7 +215,7 @@ internal sealed class PathCommands
     private async Task RevertAsync(List<SvnTarget> targets, CancellationToken ct)
     {
         var paths = targets.Select(t => t.Path).ToList();
-        if (!await ConfirmAsync(Loc.T("Annullare le modifiche locali su:\n{0}\n\nL'operazione non è reversibile.", SvnTarget.FormatList(paths))))
+        if (!await ConfirmAsync(Loc.T("Annullare le modifiche locali su:\n{0}\n\nL'operazione non è reversibile.", SvnTarget.FormatList(paths)), Loc.T("Annulla modifiche")))
             return;
 
         await _svn.RevertAsync(paths, ct);

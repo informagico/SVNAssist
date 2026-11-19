@@ -17,6 +17,10 @@ internal interface IDialogService
     /// <param name="ct">Token per annullare l'operazione.</param>
     Task<bool> ConfirmAsync(string message, CancellationToken ct);
 
+    /// <summary>Confirm an operation using an explicit action label and a cancel action.</summary>
+    Task<bool> ConfirmAsync(string message, string actionLabel, CancellationToken ct)
+        => ConfirmAsync(message, ct);
+
     /// <summary>
     /// Chiede come risolvere un conflitto di testo (Working / Mine-full / Theirs-full / Base).
     /// </summary>

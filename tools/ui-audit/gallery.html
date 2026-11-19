@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SVNAssist · UI audit</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef1f5;color:#202b3b;font:14px system-ui}header{padding:18px 24px;background:#182435;color:white}h1{font-size:20px;margin:0 0 6px}header p{margin:0;color:#c8d1df}main{display:grid;grid-template-columns:290px 1fr;height:calc(100vh - 91px)}nav{overflow:auto;background:white;padding:16px;border-right:1px solid #c8d1df}nav a{display:block;padding:9px;color:#24354d;text-decoration:none;border-radius:5px}nav a[aria-current]{background:#dceafa;font-weight:600}input,select,button{font:inherit;padding:7px;border:1px solid #aab5c4;border-radius:4px}#search{width:100%;margin-bottom:12px}.work{overflow:auto;padding:20px}label{display:inline-flex;gap:6px;align-items:center;margin:0 12px 12px 0}#stage{width:max-content;max-width:100%;}iframe{display:block;border:1px solid #aab5c4;background:#202020}h2{font-size:18px;margin:0 0 10px}#meta{margin:0 0 12px;color:#46546a}details{margin-top:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:16px;max-width:1000px}.note{margin-top:12px;max-width:900px}a{color:#135b9a}
+</style>
+<header><h1>SVNAssist · UI/UX gallery</h1><p>Production rendering · synthetic fixtures · commands recorded without execution · <a href="NATIVE-REPORT.md" style="color:#b9dcff">Native assessment report (captures kept locally)</a></p></header>
+<main><nav aria-label="Scenarios"><input id="search" type="search" aria-label="Filter scenarios" placeholder="Filter scenarios…"><div id="links"></div></nav><section class="work"><h2 id="title"></h2><p id="meta"></p>
+<label>Theme <select id="theme"><option>dark</option><option>light</option><option>blue</option></select></label>
+<label>UI language <select id="lang"><option>en</option><option>it</option></select></label>
+<label>Width <select id="width"><option>360</option><option selected>480</option><option>800</option><option>1200</option></select></label>
+<label>Height <select id="height"><option>600</option><option selected>900</option></select></label>
+<button id="reset">Reset scenario</button> <a id="fixture" download>Download fixture</a>
+<div id="stage"></div><p class="note">The language selector changes product UI labels; fixture messages remain in English. Host/backend actions are recorded below and do not execute operations. Focus, menus and local fields use production handlers.</p>
+<details><summary>Scenarioso fixture</summary><pre id="json"></pre></details><details><summary>Commands and diagnostics (refresh on opening)</summary><pre id="diagnostics"></pre></details>
+</section></main><script>
+/*DATA*/
+const $=id=>document.getElementById(id);let selected,blob;
+function list(){const q=$('search').value.toLowerCase();$('links').replaceChildren(...SCENARIOS.filter(s=>(s.title+' '+s.id).toLowerCase().includes(q)).map(s=>{const a=document.createElement('a');a.href='#'+s.id;a.textContent=s.title;if(s.id===selected?.id)a.setAttribute('aria-current','page');return a}));}
+function render(){const params=new URLSearchParams(location.hash.slice(1));selected=SCENARIOS.find(s=>s.id===(params.get('scene')||location.hash.slice(1)))||SCENARIOS[0];for(const k of ['theme','lang','width','height'])if(params.has(k)&&[...$(k).options].some(o=>o.value===params.get(k)))$(k).value=params.get(k);
+ $('title').textContent=selected.title;$('meta').textContent=selected.id+' · '+selected.source;$('json').textContent=JSON.stringify(selected.state,null,2);
+ if(blob)URL.revokeObjectURL(blob);blob=URL.createObjectURL(new Blob([JSON.stringify(selected.state,null,2)],{type:'application/json'}));$('fixture').href=blob;$('fixture').download=selected.id+'.json';
+ const config={scenario:selected,theme:$('theme').value,lang:$('lang').value};const frame=document.createElement('iframe');frame.title=selected.title;frame.width=$('width').value;frame.height=$('height').value;
+ frame.srcdoc=UI.replace('<head>','<head><script>window.__auditConfig='+JSON.stringify(config).replace(/</g,'\\u003c')+';<\/script>').replace('<body>','<body data-view="'+selected.view+'">');frame.dataset.view=selected.view;
+ $('stage').replaceChildren(frame);list();}
+function navigate(){location.hash=new URLSearchParams({scene:selected.id,theme:$('theme').value,lang:$('lang').value,width:$('width').value,height:$('height').value});}
+for(const k of ['theme','lang','width','height'])$(k).onchange=navigate;$('reset').onclick=render;$('search').oninput=list;addEventListener('hashchange',render);
+$('diagnostics').parentElement.addEventListener('toggle',()=>{const w=$('stage').firstChild?.contentWindow;$('diagnostics').textContent=JSON.stringify({errors:w?.__auditErrors,commands:w?.__auditCommands},null,2)});render();
+</script></html>

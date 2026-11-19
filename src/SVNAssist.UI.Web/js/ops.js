@@ -140,7 +140,7 @@
       `<label for="bt-name">${esc(t('Nome'))}</label><input id="bt-name" type="text" autocomplete="off" spellcheck="false" placeholder="${esc(t('es. feature-x'))}" value="${esc(bt.name)}" ${off}>` +
       `<p class="muted">${esc(t('Destinazione'))}: <code>${esc(dest)}</code></p>` +
       `<label>${esc(t('Copia da'))}</label>` + rd('src', 'head', bt.src, t('Ultima revisione (HEAD) di {0}', b.from), t('Il server non include le modifiche locali')) +
-      `<div class="bt-row">${rd('src', 'rev', bt.src, t('Revisione'))}<input id="bt-rev" type="text" inputmode="numeric" autocomplete="off" placeholder="${esc(t('es. 1234'))}" value="${esc(bt.rev)}" ${bt.src === 'rev' && !b.busy ? '' : 'disabled'}></div>` +
+      `<div class="bt-row">${rd('src', 'rev', bt.src, t('Revisione'))}<input id="bt-rev" type="text" inputmode="numeric" autocomplete="off" aria-label="${esc(t('Revisione'))}" placeholder="${esc(t('es. 1234'))}" value="${esc(bt.rev)}" ${bt.src === 'rev' && !b.busy ? '' : 'disabled'}></div>` +
       (b.dirty ? rd('src', 'wc', bt.src, t('Working copy'), t('Include le modifiche locali non committate')) : '') +
       `<label for="bt-msg">${esc(t('Messaggio di log'))}</label><textarea id="bt-msg" rows="3" ${off}>${esc(O.btMsg(b))}</textarea>` +
       `<label class="ock"><input id="bt-sw" type="checkbox" data-bt="sw" ${bt.sw ? 'checked' : ''} ${off}><span><b>${esc(tag ? t('Passa subito al nuovo tag') : t('Passa subito al nuovo branch'))}</b></span></label>` +
@@ -188,11 +188,12 @@
     return open;
   };
   // Eventi (una volta per vista): spunte, OK del Cleanup, Esc, Tab dentro il modale.
-  O.wire = (box, getState) => {
-    const shClose = () => { sh = null; O.render(box, getState()); };
+  O.wire = (box, getState, renderView) => {
+    // The view synchronizes inert before restoring focus on close.
+    const shClose = () => { sh = null; if (renderView) renderView(); else O.render(box, getState()); };
     const shOk = () => { const n = box.querySelector('#sh-name'), k = box.querySelector('#sh-keep'); U.bridge.send('shelve', { ...(sh.keys.length ? { keys: sh.keys } : {}), name: n.value, keep: k.checked }); shClose(); };
     // keys vuote = tutte le modifiche; il nome proposto e' "Modifiche del <data ora>"
-    O.shelveShow = keys => { sh = { keys, name0: t('Modifiche del {0}', U.fmtDate(new Date().toISOString())) }; O.render(box, getState()); };
+    O.shelveShow = keys => { sh = { keys, name0: t('Modifiche del {0}', U.fmtDate(new Date().toISOString())) }; O.render(box, getState()); if (renderView) renderView(); };
     box.addEventListener('click', e => { if (!sh) return; if (e.target.closest('[data-sh-ok]')) shOk(); else if (e.target.closest('[data-sh-cancel]')) shClose(); });
     box.addEventListener('keydown', e => { if (sh && e.key === 'Enter' && e.target.id === 'sh-name') { e.preventDefault(); shOk(); } });
     box.addEventListener('change', e => { const k = e.target.dataset && e.target.dataset.ock; if (k) { O.toggle(k); O.render(box, getState()); } });

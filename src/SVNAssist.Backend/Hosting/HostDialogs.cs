@@ -19,6 +19,9 @@ internal sealed class HostDialogs : IDialogService
     public async Task<bool> ConfirmAsync(string message, CancellationToken ct)
         => await _host.PromptAsync(message, OkCancel) == 0;
 
+    public async Task<bool> ConfirmAsync(string message, string actionLabel, CancellationToken ct)
+        => await _host.PromptAsync(message, [actionLabel, Loc.T("Annulla")]) == 0;
+
     /// <inheritdoc />
     public Task<string?> AskTextAsync(string message, string label, string defaultValue, CancellationToken ct)
         => _host.PromptTextAsync(message, label, defaultValue);

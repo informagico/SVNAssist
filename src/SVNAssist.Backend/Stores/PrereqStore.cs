@@ -39,7 +39,6 @@ internal sealed class PrereqStore
     private bool _autoOpened;
     private bool? _svnWasMissing;
     private int _busy;
-    private string _summary = Loc.T("Prerequisiti");
     private string _ai = string.Empty;
     private string _feedback = string.Empty;
     private DownloadDto? _download;
@@ -96,7 +95,13 @@ internal sealed class PrereqStore
     internal PrereqDto GetSnapshot()
     {
         lock (_lock)
-            return new PrereqDto(_isOpen, _summary, _ai, _feedback, _items);
+        {
+            // Derive the summary in the current language, including before the first probe.
+            var summary = Snapshot is null ? Loc.T("Prerequisiti")
+                : Snapshot.ProblemCount == 0 ? Loc.T("Prerequisiti") + " ✓"
+                : Loc.T("Prerequisiti ({0} da sistemare)", Snapshot.ProblemCount);
+            return new PrereqDto(_isOpen, summary, _ai, _feedback, _items);
+        }
     }
 
     /// <summary>Apre/chiude la sezione.</summary>
@@ -129,7 +134,6 @@ internal sealed class PrereqStore
     internal async Task<PrerequisitesSnapshot> RefreshAsync(CancellationToken ct)
     {
         var snapshot = await _service.CheckAsync(ct);
-        Snapshot = snapshot;
 
         var items = snapshot.Items.Select(ToDto).ToList();
 
@@ -141,8 +145,8 @@ internal sealed class PrereqStore
 
         lock (_lock)
         {
+            Snapshot = snapshot;
             _items = items;
-            _summary = snapshot.ProblemCount == 0 ? Loc.T("Prerequisiti") + " ✓" : Loc.T("Prerequisiti ({0} da sistemare)", snapshot.ProblemCount);
             _ai = ai;
         }
 

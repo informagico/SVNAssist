@@ -179,6 +179,7 @@ internal sealed class BackendServer : IBackend, IDisposable
                     await FlushAsync(channel);
                     break;
                 case "cmd":
+                    await ApplyLanguageAsync();
                     await HandleCommandAsync(channel, root);
                     break;
                 default:
@@ -283,6 +284,7 @@ internal sealed class BackendServer : IBackend, IDisposable
     {
         try
         {
+            await ApplyLanguageAsync();
             await Task.WhenAll(
                 Changes.OnSolutionChangedAsync(solutionDir, _lifetime.Token),
                 Log.OnSolutionChangedAsync(solutionDir, _lifetime.Token));
@@ -305,6 +307,7 @@ internal sealed class BackendServer : IBackend, IDisposable
     {
         try
         {
+            await ApplyLanguageAsync();
             await _pathCommands.RunAsync(command, paths, _lifetime.Token);
         }
         catch (Exception ex)
@@ -335,6 +338,8 @@ internal sealed class BackendServer : IBackend, IDisposable
 
     public async Task<Dictionary<string, string>> GetSccStatesAsync()
     {
+        // Solution Explorer can start the stores before any web view is ready.
+        await ApplyLanguageAsync();
         await Changes.OnReadyAsync(_lifetime.Token); // avvia il caricamento anche senza finestre aperte (idempotente)
         return Changes.SccStates();
     }

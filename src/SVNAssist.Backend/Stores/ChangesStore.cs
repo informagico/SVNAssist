@@ -74,7 +74,8 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
     private string? _branchLoadedFor;
     private bool _autoDetected;
     private bool _statusIsAuto = true;
-    private string _statusMessage = Loc.T("Caricamento in corso...");
+    private string _statusMessage = string.Empty;
+    private bool _hasStatusMessage;
     private bool _showWorkingCopyInput;
     private bool _isTreeView = true;
     private bool _loading = true;
@@ -2476,7 +2477,7 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
                     entries.Count, ListForConfirmation(entries))
                 : Loc.T("Annullare il merge della cartella \"{2}\"? Le modifiche locali sotto questa cartella ({0} elementi) tornano allo stato di BASE; il resto della working copy non è toccato.\n\n{1}\n\nL'operazione non è annullabile.",
                     entries.Count, ListForConfirmation(entries), _mergeSub);
-        if (!await _dialogs.ConfirmAsync(confirm, ct))
+        if (!await _dialogs.ConfirmAsync(confirm, Loc.T("Annulla merge"), ct))
             return;
 
         // Tutto quello che c'e' ora (merge compreso) in una patch: se il ripristino non torna identico non si perde nulla. Percorsi espliciti: a --depth empty la radice sola non salverebbe niente.
@@ -2638,9 +2639,10 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
     /// <summary>Messaggio di stato + eventuale pulsante d'azione: working copy bloccata -> "Esegui Cleanup".</summary>
     private StatusDto BuildStatus()
     {
+        var message = _hasStatusMessage ? _statusMessage : Loc.T("Caricamento in corso...");
         // "Errore..." (it) e "Error..." (en) iniziano uguale: il test non dipende dalla lingua.
-        var isError = _statusMessage.StartsWith("Error", StringComparison.Ordinal);
-        return new StatusDto(_statusMessage, isError,
+        var isError = message.StartsWith("Error", StringComparison.Ordinal);
+        return new StatusDto(message, isError,
             !isError ? (_restoreBackup is not null ? new StatusActionDto(Loc.T("Ripristina modifiche"), "restoreBackup")
                     : _statusMessage == _updateHint ? new StatusActionDto(Loc.T("SVN Update ora"), "update") : null)
                 : _pendingSwitch.Get(_workingCopyPath) is not null ? new StatusActionDto(Loc.T("Completa switch"), "switchResume")
@@ -2732,7 +2734,7 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
         if (items.Any(e => e.Status is SvnStatusKind.Modified or SvnStatusKind.Replaced or SvnStatusKind.Conflicted or SvnStatusKind.Added))
             message += "\n\n" + Loc.T("ATTENZIONE: il file ha modifiche locali non committate, che andranno perse.");
 
-        if (!await _dialogs.ConfirmAsync(message, ct))
+        if (!await _dialogs.ConfirmAsync(message, Loc.T("Elimina"), ct))
             return;
 
         try
@@ -2795,7 +2797,7 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
             : target.SingleFile is null && target.Path.Length > 0 ? Loc.T(" nella cartella \"{0}\"", target.Path) : string.Empty;
         var message = Loc.T("Annullare le modifiche locali su {0} elementi{1}?\n\n{2}\n\nLe modifiche andranno perse e l'operazione non è annullabile.",
             targets.Count, scope, ListForConfirmation(targets));
-        if (!await _dialogs.ConfirmAsync(message, ct))
+        if (!await _dialogs.ConfirmAsync(message, Loc.T("Annulla modifiche"), ct))
             return;
 
         string? backup = null;
@@ -3520,6 +3522,7 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
         lock (_stateLock)
         {
             _statusMessage = message;
+            _hasStatusMessage = true;
             _statusSeq++;
         }
 
@@ -3530,7 +3533,10 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
     private void SetStatusAuto(string message)
     {
         lock (_stateLock)
+        {
             _statusMessage = message;
+            _hasStatusMessage = true;
+        }
         NotifyChanged();
     }
 

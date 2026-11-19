@@ -609,7 +609,7 @@
       root.addEventListener('keydown', wizKeys);
       root.addEventListener('keydown', revKeys);
       root.addEventListener('keydown', swKeys);
-      U.ops.wire(root.querySelector("#ops"), () => st);
+      U.ops.wire(root.querySelector("#ops"), () => st, render);
       root.addEventListener('keydown', rcKeys);
       root.addEventListener('click', e => {   // pannello Recenti: apri/chiudi dal pulsante, scegli una voce, chiudi con un clic fuori
         const b = e.target.closest('[data-recent]'), row = e.target.closest('#rec .rc-row');

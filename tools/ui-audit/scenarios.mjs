@@ -1,0 +1,65 @@
+// Synthetic fixtures: no SVN/AI connections or user data.
+import { readFileSync } from 'node:fs';
+const fixture = n => JSON.parse(readFileSync(new URL(`./fixtures/${n}.json`, import.meta.url), 'utf8'));
+export const scenarios = [];
+const add = (id, title, view, change = () => {}, action = null) => {
+  const state = view === 'settings' ? { values: { aiProvider: 'auto', defaultLanguage: 'auto', windowTheme: 'auto', uiLanguage: 'en', headCheckMinutes: '5', repoLayout: 'trunk/branches/tags' }, hasAiKey: false, hasAnthropicKey: false } : fixture(view);
+  if (view === 'changes') state.prereq.open = false;
+  change(state);
+  scenarios.push({ id, title, view, source: `src/SVNAssist.UI.Web/js/${view}.js`, state, action });
+};
+const empty = s => { s.sections.forEach(x => { x.count = 0; x.rows = []; }); s.commit.count = 0; s.commit.text = ''; s.commit.trace = []; s.commit.aiStatus = ''; s.status.msg = ''; };
+add('changes', 'Changes · selection and commit', 'changes');
+add('changes-empty', 'Changes · clean working copy', 'changes', empty);
+add('changes-no-wc', 'Changes · no working copy', 'changes', s => { empty(s); Object.assign(s.workingCopy, { path: '', branch: '', rev: null, showInput: true }); s.status.msg = 'No working copy configured.'; });
+add('changes-loading', 'Changes · loading', 'changes', s => { s.loading = true; s.status.msg = 'Loading...'; });
+add('changes-error', 'Changes · error and recovery', 'changes', s => { s.status = { msg: 'svn: E155004: Working copy locked. Run Cleanup and retry.', err: true, action: { cmd: 'cleanup', label: 'Run Cleanup' } }; });
+add('changes-behind', 'Changes · incoming revision', 'changes', s => { Object.assign(s.workingCopy, { revState: 'behind', head: 130 }); });
+add('changes-long', 'Changes · long paths and messages', 'changes', s => { s.workingCopy.branch = 'branches/feature-international-invoicing-workflow-restructuring'; s.commit.text = 'Fix tax calculation and update payment validation.\n\nHandle rounding for every supported market.'; s.sections[1].rows[0].name = 'InternationalInvoiceReconciliationControllerWithExtendedValidation.cs'; });
+add('changes-large', 'Changes · 500 files', 'changes', s => { const row = s.sections[1].rows[0]; s.sections[1].rows = Array.from({ length: 500 }, (_, i) => ({ ...row, key: `changes:src/File${i}.cs`, name: `File${i}.cs`, status: 'M', statusText: 'Modified' })); s.sections[1].count = 500; });
+add('ai-loading', 'AI · generation', 'changes', s => { Object.assign(s.commit, { busy: true, aiLevel: 'busy', aiStatus: 'Generating…' }); });
+add('ai-error', 'AI · expired authentication', 'changes', s => { Object.assign(s.commit, { aiLevel: 'err', aiStatus: 'Provider authentication expired.', aiAction: { label: 'Sign in again', cmd: 'wizardOpenAuth' } }); });
+add('prereq', 'Prerequisites · checklist', 'changes', s => { s.prereq.open = true; });
+add('conflicts', 'Conflicts · text, property and tree', 'changes', s => { s.conflicts = ['text', 'property', 'tree'].map((kind, i) => ({ key: `changes:src/File${i}.cs`, name: `File${i}.cs`, path: `src/File${i}.cs`, kind, files: kind === 'text' ? ['File0.cs.mine', 'File0.cs.r123'] : [] })); });
+add('shelved', 'Shelved · saved patches', 'changes', s => { s.shelves = [{ id: 'audit', name: 'Work before switching branches', date: '2026-11-19T09:00:00Z', files: 3 }]; });
+add('recent', 'Commit · recent messages', 'changes', undefined, 'recent');
+add('menu-more', 'Changes · actions menu', 'changes', undefined, 'more');
+add('menu-ai', 'AI · options menu', 'changes', undefined, 'ai');
+add('menu-row', 'Changes · file context menu', 'changes', undefined, 'row');
+add('shelve', 'Shelve · save changes', 'changes', undefined, 'shelve');
+add('shelved-menu', 'Shelved · restore and delete', 'changes', s => { s.shelves = [{ id: 'audit', name: 'Work before switching branches', date: '2026-11-19T09:00:00Z', files: 3 }]; }, 'shelved-menu');
+for (const step of [1, 2, 3, 4]) add(`wizard-${step}`, `AI setup · step ${step}`, 'changes', s => {
+  Object.assign(s.wizard, { open: true, step, provider: 'openai', auth: 'openai', canNext: true, endpoint: 'https://example.invalid/v1', items: s.prereq.items, providers: [{ id: 'copilot', title: 'GitHub Copilot', cost: 'Subscription' }, { id: 'claudecode', title: 'Claude Code', cost: 'Subscription' }, { id: 'openai', title: 'OpenAI-compatible', cost: 'API key' }], models: [{ value: 'audit-model', label: 'Example model', cost: 'Cost unavailable' }], model: 'audit-model' });
+});
+add('wizard-model-error', 'AI setup · model list unavailable', 'changes', s => { Object.assign(s.wizard, { open: true, step: 4, modelsError: 'Cannot load models: authentication expired.', models: [], modelsLoading: false }); });
+add('wizard-prereq', 'Prerequisites · guided setup', 'changes', s => { Object.assign(s.wizard, { open: true, mode: 'prereq', items: s.prereq.items }); });
+for (const mode of ['normal', 'loading', 'error', 'empty']) {
+  add(`revision-${mode}`, `Update to revision · ${mode}`, 'changes', s => { Object.assign(s.revPicker, { open: true, target: s.workingCopy.path, loading: mode === 'loading', error: mode === 'error' ? 'Server unreachable.' : '', items: mode === 'normal' ? fixture('log').entries : [] }); });
+  add(`switch-${mode}`, `Switch · ${mode}`, 'changes', s => { Object.assign(s.switchPicker, { open: true, loading: mode === 'loading', error: mode === 'error' ? 'Server unreachable.' : '', recent: ['branches/feature-x'], items: mode === 'normal' ? [{ name: 'trunk', kind: 'trunk', current: true }, { name: 'branches/feature-x', kind: 'branch', author: 'mrossi', rev: 124, date: '2026-11-10T10:00:00Z' }, { name: 'tags/1.0', kind: 'tag' }] : [] }); });
+}
+add('switch-warning', 'Switch · local changes', 'changes', s => { s.switchWarn = { target: 'branches/feature-x', total: 3, counts: { modified: 2, unversioned: 1 } }; });
+add('merge-picker', 'Merge · source branch picker', 'changes', s => { Object.assign(s.switchPicker, { open: true, mode: 'merge', items: [{ name: 'trunk', kind: 'trunk', current: true }, { name: 'branches/feature-x', kind: 'branch' }] }); });
+add('switch-extended', 'Switch · extended list', 'changes', s => { Object.assign(s.switchPicker, { open: true, items: Array.from({ length: 100 }, (_, i) => ({ name: `branches/feature-${i}`, kind: 'branch', rev: 120 + i, author: 'mrossi', date: '2026-11-10T10:00:00Z' })) }); }, 'switch-extended');
+add('switch-interrupted', 'Switch · interruption recovery', 'changes', s => { s.status = { err: true, msg: 'Switch interrupted: working copy partially updated.', action: { cmd: 'switchResume', label: 'Complete switch' }, action2: { cmd: 'switchBack', label: 'Return to previous branch' } }; });
+add('cleanup', 'Cleanup · options', 'changes', s => { s.cleanup = { extras: true, svnVersion: '1.14' }; });
+add('cleanup-danger', 'Cleanup · confirm destructive actions', 'changes', s => { s.cleanup = { extras: true, svnVersion: '1.14' }; }, 'cleanup-danger');
+add('commit-warning', 'Commit All · unversioned files', 'changes', s => { s.commitWarn = { count: 2, items: ['docs/notes.txt', 'src/NewFile.cs'], more: 0 }; });
+for (const kind of ['branch', 'tag']) add(kind, `Branch/Tag · ${kind}`, 'changes', s => { s.branchTag = { kind, from: 'trunk', rev: 124, branches: 'branches', tags: 'tags', dirty: true, busy: false }; });
+for (const ai of ['idle', 'loading', 'done', 'error']) add(`incoming-${ai}`, `SVN Update · preview / AI ${ai}`, 'changes', s => { s.incoming = { count: 2, branch: 'trunk', more: 0, items: fixture('log').entries.map(e => ({ ...e, message: e.msg, files: e.paths.map(p => ({ action: p.a, path: p.p })) })), ai: { state: ai, text: ai === 'error' ? 'Provider unavailable.' : 'Payment and VAT calculation updates.' } }; });
+for (const mode of ['running', 'success', 'error', 'cancelled', 'conflicts']) add(`progress-${mode}`, `Operation · ${mode}`, 'changes', s => { s.progress = { op: 'merge', origin: 'changes', title: 'SVN Merge', phase: 'Applying revisions', running: mode === 'running', cancellable: mode === 'running', ok: ['success', 'conflicts'].includes(mode), cancelled: mode === 'cancelled', total: 10, processed: 4, conflicts: mode === 'conflicts' ? 2 : 0, lines: [{ k: 'U', t: 'src/OrderService.cs' }, { k: 'C', t: 'src/CheckoutController.cs' }], summary: mode === 'error' ? 'Server unreachable.' : mode === 'cancelled' ? 'Operation cancelled; some changes have already been applied.' : 'Operation completed.' }; });
+const pending = { source: 'branches/feature-x', total: 7, applied: 3, remaining: 4, appliedText: 'Applied 3 of 7 revisions.', remainingText: '4 revisions remain.', steps: ['Resolve the conflicts.', 'Mark the files as resolved.', 'Continue the merge.'], alternative: 'Undo merge restores the working copy.', canContinue: false, whyNot: '2 conflicts remain.', appliedRevs: [121, 122, 123], remainingRevs: [124, 125, 126, 127], busy: false };
+add('merge-interrupted', 'Merge · interrupted', 'changes', s => { s.merge = { pending, conflicts: 2 }; });
+add('merge-continue', 'Merge · ready to continue', 'changes', s => { s.merge = { pending: { ...pending, canContinue: true, whyNot: '' }, conflicts: 0 }; });
+add('log', 'Log · history and details', 'log');
+add('log-empty', 'Log · no results', 'log', s => { s.entries = []; s.sel = null; s.diff = ''; s.msg = 'No revisions found.'; });
+add('log-loading', 'Log · loading', 'log', s => { s.loading = true; s.msg = 'Loading log...'; });
+add('log-error', 'Log · error', 'log', s => { s.err = true; s.msg = 'Server unreachable.'; });
+add('log-compare', 'Log · revision comparison', 'log', s => { s.files = { kind: 'compare', title: 'Files changed between r123 and r124', items: [{ a: 'M', p: '/trunk/Core/Services/OrderService.cs' }] }; });
+add('log-menu', 'Log · revision menu', 'log', undefined, 'log-menu');
+add('log-options', 'Log · history options', 'log', s => { s.stopOnCopy = true; s.includeMerged = true; });
+for (const mode of ['normal', 'blocked', 'error', 'interrupted']) add(`log-merge-${mode}`, `Log / Merge · ${mode}`, 'log', s => { s.merge = { title: 'Merge from branches/feature-x', selected: [124], eligible: 2, busy: false, loading: false, dirty: 2, files: null, blocked: mode === 'blocked' ? 'Resolve the working copy conflicts.' : '', error: mode === 'error' ? 'The working copy has mixed revisions.' : '', needsUpdate: mode === 'error', interrupted: mode === 'interrupted' ? pending : null }; });
+for (const mode of ['preview', 'merge']) add(`merge-result-${mode}`, `Merge · result ${mode}`, 'log', s => { s.merge = { title: 'Merge from branches/feature-x', selected: [124], eligible: 2, busy: false, loading: false, dirty: 0, files: { subject: 'r124', files: 1, items: [{ a: 'M', p: 'src/OrderService.cs', n: 1 }] }, result: { mode, revs: 'r124', counts: { updated: 1, added: 0, deleted: 0, merged: 0, conflicted: mode === 'merge' ? 1 : 0 }, items: [{ a: 'M', p: 'src/OrderService.cs' }], skipped: 0 } }; });
+add('progress-other-view', 'Log · operation started in Changes', 'log', s => { s.progress = { origin: 'changes', running: true, title: 'SVN Update' }; });
+add('diff', 'Web Diff · side-by-side comparison', 'diff');
+add('diff-empty', 'Web Diff · no text differences', 'diff', s => { s.diff = ''; });
+for (const provider of ['auto', 'copilot', 'claudecode', 'claude', 'openai', 'gemini']) add(`settings-${provider}`, `Settings · ${provider}`, 'settings', s => { Object.assign(s.values, { aiProvider: provider, aiEndpoint: 'https://example.invalid/v1', aiModel: 'audit-model', claudeModel: 'audit-model', copilotModel: 'default' }); s.hasAiKey = provider === 'openai'; });

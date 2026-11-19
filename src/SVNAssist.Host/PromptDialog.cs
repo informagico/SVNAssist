@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.VisualStudio.PlatformUI;
@@ -11,6 +12,7 @@ namespace SVNAssist.Host
     internal sealed class PromptDialog : DialogWindow
     {
         private int _result = -1;
+        private Button _cancelButton;
 
         private PromptDialog(string message, string[] buttons)
         {
@@ -33,6 +35,8 @@ namespace SVNAssist.Host
                 var b = new Button { Content = buttons[i], MinWidth = 80, Padding = new Thickness(12, 3, 12, 3), Margin = new Thickness(i == 0 ? 0 : 8, 0, 0, 0) };
                 b.SetResourceReference(StyleProperty, VsResourceKeys.ThemedDialogButtonStyleKey);
                 b.Click += (s, e) => { _result = index; DialogResult = true; };
+                if (buttons[i] == Loc.T("Annulla"))
+                    _cancelButton = b;
                 row.Children.Add(b);
             }
 
@@ -74,6 +78,8 @@ namespace SVNAssist.Host
             var row = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
             var l = new TextBlock { Text = label, Margin = new Thickness(0, 0, 0, 2) };
             l.SetResourceReference(TextBlock.ForegroundProperty, EnvironmentColors.ToolWindowTextBrushKey);
+            AutomationProperties.SetName(input, label);
+            AutomationProperties.SetLabeledBy(input, l);
             row.Children.Add(l);
             row.Children.Add(input);
             return row;
@@ -95,7 +101,7 @@ namespace SVNAssist.Host
             // il contenuto e' un DockPanel (bottoni in basso, testo che riempie): si inserisce il campo tra testo e bottoni
             var panel = (DockPanel)Content;
             var scroll = (ScrollViewer)panel.Children[1];
-            var stack = new StackPanel();
+            var stack = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
             panel.Children.Remove(scroll);
             stack.Children.Add(scroll);
             stack.Children.Add(_inputs);
@@ -108,6 +114,8 @@ namespace SVNAssist.Host
         public static int Show(string message, string[] buttons)
         {
             var d = new PromptDialog(message ?? "", buttons.Length == 0 ? new[] { "OK" } : buttons);
+            // Generic confirmations start on Cancel; text prompts retain their input focus.
+            d.Loaded += (s, e) => d._cancelButton?.Focus();
             d.ShowModal();
             return d._result;
         }

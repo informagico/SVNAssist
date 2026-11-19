@@ -430,6 +430,14 @@ internal sealed class FakeSvnService : ISvnService
 /// <summary>Dialoghi finti: risposta preimpostata e registro dei messaggi mostrati.</summary>
 internal sealed class FakeDialogs : IDialogService
 {
+    public List<string> ActionLabels { get; } = [];
+
+    public Task<bool> ConfirmAsync(string message, string actionLabel, CancellationToken ct)
+    {
+        ActionLabels.Add(actionLabel);
+        return ConfirmAsync(message, ct);
+    }
+
     public bool ConfirmResult { get; set; } = true;
     public SvnConflictChoice? ConflictResult { get; set; } = SvnConflictChoice.TheirsFull;
     public List<string> Messages { get; } = [];

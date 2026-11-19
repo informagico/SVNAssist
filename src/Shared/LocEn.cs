@@ -705,6 +705,8 @@ namespace SVNAssist
             ["Rimaste {0}."] = "Remaining {0}.",
             ["Continua merge"] = "Continue merge",
             ["Annulla merge"] = "Undo merge",
+            ["Annulla modifiche"] = "Revert changes",
+            ["Elimina"] = "Delete",
             ["Merge interrotto dopo {0} di {1} revisioni applicate: puoi continuarlo."] = "Merge interrupted after {0} of {1} revisions applied: you can continue it.",
         };
     }

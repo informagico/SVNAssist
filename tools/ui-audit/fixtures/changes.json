@@ -1,0 +1,251 @@
+{
+  "workingCopy": {
+    "path": "C:\\dev\\Acme.Shop",
+    "showInput": false,
+    "branch": "trunk",
+    "rev": 124,
+    "head": 124,
+    "revState": "current"
+  },
+  "commit": {
+    "text": "Add coupon total calculation",
+    "aiStatus": "Message generated with AI (Claude Code).",
+    "aiLevel": "",
+    "aiSeq": 0,
+    "busy": false,
+    "lang": "auto",
+    "trace": [
+      {
+        "name": "Copilot",
+        "state": "skip",
+        "detail": "runtime not downloaded"
+      },
+      {
+        "name": "Claude Code",
+        "state": "ok",
+        "detail": ""
+      }
+    ],
+    "download": null,
+    "count": 2,
+    "recent": [
+      "Fix cart total",
+      "Add coupons"
+    ],
+    "all": false
+  },
+  "view": "tree",
+  "theme": {
+    "mode": "auto",
+    "kind": "dark"
+  },
+  "sections": [
+    {
+      "id": "staged",
+      "title": "Staged",
+      "count": 2,
+      "expanded": true,
+      "rows": [
+        {
+          "key": "staged:Core/Services",
+          "kind": "folder",
+          "depth": 0,
+          "name": "Core/Services",
+          "expanded": true,
+          "count": 2,
+          "status": null,
+          "statusText": "",
+          "can": {
+            "diff": true,
+            "stage": false,
+            "unstage": true,
+            "add": false,
+            "ignore": false,
+            "revert": false,
+            "resolve": false,
+            "deleteFile": false,
+            "lock": false,
+            "unlock": false
+          },
+          "tooltip": "Core/Services"
+        },
+        {
+          "key": "staged:Core/Services/OrderService.cs",
+          "kind": "file",
+          "depth": 1,
+          "name": "OrderService.cs",
+          "detail": "",
+          "dir": false,
+          "status": "M",
+          "statusText": "Modified",
+          "can": {
+            "diff": true,
+            "stage": false,
+            "unstage": true,
+            "add": false,
+            "ignore": false,
+            "revert": true,
+            "resolve": false,
+            "deleteFile": true,
+            "lock": false,
+            "unlock": false
+          },
+          "tooltip": "Core/Services/OrderService.cs — Modified"
+        },
+        {
+          "key": "staged:Core/Services/Coupon.cs",
+          "kind": "file",
+          "depth": 1,
+          "name": "Coupon.cs",
+          "detail": "",
+          "dir": false,
+          "status": "To",
+          "statusText": "Added",
+          "can": {
+            "diff": true,
+            "stage": false,
+            "unstage": true,
+            "add": false,
+            "ignore": false,
+            "revert": true,
+            "resolve": false,
+            "deleteFile": true,
+            "lock": false,
+            "unlock": false
+          },
+          "tooltip": "Core/Services/Coupon.cs — Added"
+        }
+      ]
+    },
+    {
+      "id": "changes",
+      "title": "Modifiche",
+      "count": 1,
+      "expanded": true,
+      "rows": [
+        {
+          "key": "changes:Web/CheckoutController.cs",
+          "kind": "file",
+          "depth": 0,
+          "name": "CheckoutController.cs",
+          "detail": "Web",
+          "dir": false,
+          "status": "C",
+          "statusText": "Conflict",
+          "can": {
+            "diff": true,
+            "stage": false,
+            "unstage": false,
+            "add": false,
+            "ignore": false,
+            "revert": true,
+            "resolve": true,
+            "deleteFile": true,
+            "lock": false,
+            "unlock": false
+          },
+          "tooltip": "Web/CheckoutController.cs — Conflict"
+        }
+      ]
+    },
+    {
+      "id": "unversioned",
+      "title": "Non versionati",
+      "count": 1,
+      "expanded": true,
+      "rows": [
+        {
+          "key": "unversioned:docs/notes.txt",
+          "kind": "file",
+          "depth": 0,
+          "name": "notes.txt",
+          "detail": "docs",
+          "dir": false,
+          "status": "?",
+          "statusText": "Unversioned",
+          "can": {
+            "diff": false,
+            "stage": true,
+            "unstage": false,
+            "add": true,
+            "ignore": true,
+            "revert": false,
+            "resolve": false,
+            "deleteFile": true,
+            "lock": false,
+            "unlock": false
+          },
+          "tooltip": "docs/notes.txt — Unversioned"
+        }
+      ]
+    }
+  ],
+  "status": {
+    "msg": "1 conflicted, 2 modified, 1 unversioned.",
+    "err": false
+  },
+  "prereq": {
+    "open": true,
+    "summary": "Prerequisites (1 to fix)",
+    "ai": "AI Provider: auto. Available: Claude Code",
+    "feedback": "",
+    "items": [
+      {
+        "id": "svn",
+        "group": "Required",
+        "title": "Subversion client (svn.exe)",
+        "ok": true,
+        "detail": "C:\\Program Files\\SlikSvn\\bin\\svn.exe",
+        "instructions": "",
+        "primary": "",
+        "secondary": ""
+      },
+      {
+        "id": "gh-cli",
+        "group": "AI providers (one is enough)",
+        "title": "GitHub CLI (gh)",
+        "ok": false,
+        "detail": "gh.exe not found.",
+        "instructions": "winget install --id GitHub.cli -e",
+        "primary": "Install GitHub CLI",
+        "secondary": ""
+      }
+    ]
+  },
+  "loading": false,
+  "wizard": {
+    "open": false,
+    "mode": "ai",
+    "step": 1,
+    "fromGenerate": false,
+    "provider": "",
+    "busy": false,
+    "feedback": "",
+    "providers": [],
+    "items": [],
+    "auth": "",
+    "authOk": false,
+    "authDetail": "",
+    "endpoint": "",
+    "models": [],
+    "model": "",
+    "canNext": false
+  },
+  "revPicker": {
+    "open": false,
+    "target": "",
+    "loading": false,
+    "error": "",
+    "canMore": false,
+    "items": []
+  },
+  "switchPicker": {
+    "open": false,
+    "mode": "switch",
+    "loading": false,
+    "error": "",
+    "items": [],
+    "recent": []
+  },
+  "conflicts": []
+}
