@@ -1,0 +1,26 @@
+{
+  "commit": "739f7c0468a66d4b06b32d6fe32b2f7578606f2e",
+  "note": "Hashes describe working tree files, including uncommitted changes.",
+  "sources": {
+    "src/SVNAssist.UI.Web/index.html": "11359ae4a87abcda4726deb3ee10f296fa17400a82b09613e5e774e9f096f208",
+    "tools/ui-audit/scenarios.mjs": "be1d0bbdf8dcbe4e3c267779e117da258924f6bb103c77d2c838d592fcfe88c5",
+    "tools/ui-audit/gallery.html": "614fa5486e967d5966c87c5cff2e4c0f78ddebd9cd62f45062ae3c26a592c651",
+    "src/SVNAssist.UI.Web/css/tokens.css": "3729cef06e1663144ce63b5ebdf8e70e97849d37fc206cc2e4275cd4e5e04413",
+    "src/SVNAssist.UI.Web/css/panel.css": "0749a03360683ab62976a0fdb43eb707fd3b378b728140419ce6f43a452c8247",
+    "src/SVNAssist.UI.Web/js/i18n.js": "885d1874dee9916fa66be7acd223761da3795159cae751700c90d197b49e7512",
+    "src/SVNAssist.UI.Web/js/util.js": "bf9948b4e9ae5ea38aa4231a22172ee4cffae3601aa06fc6d3bb1e66d2e1940a",
+    "src/SVNAssist.UI.Web/js/bridge.js": "2e7ecffe727541fcc66658416bbe56d0780ffa2de4fd117655fa0cfe77f4d911",
+    "src/SVNAssist.UI.Web/js/ctxmenu.js": "94ce24c92d4671e7618b047b74d72689ff11f54a25663557b27222f6dd4448f4",
+    "src/SVNAssist.UI.Web/js/diff.js": "d7457b179bb0459230d720fc63a210deae660228599ec3c8fe737ab56329089b",
+    "src/SVNAssist.UI.Web/js/tree.js": "cb86d9657e82890b616bded7f72d95af07a866fad9e03333cb919406681bc796",
+    "src/SVNAssist.UI.Web/js/prereq.js": "fa10b9c799e418779b285a72ccfd23091ef66fa4cbc3ccb849be0148673d1958",
+    "src/SVNAssist.UI.Web/js/ops.js": "e8a7f9b4859d49d3d023de125289f244e69711bfaeb9529907559b37f42b4ebb",
+    "src/SVNAssist.UI.Web/js/changes.js": "c0d3bfd0087f5cbef862ce039f709938bd5a3e421f4ebc5ea315937fa553a911",
+    "src/SVNAssist.UI.Web/js/log.js": "fa76ecbd1e12b9684060b49e760be5c83083b7ad34617301b581671d6a1c2831",
+    "src/SVNAssist.UI.Web/js/settings.js": "885b3e5344c68c72aca8e3b68afa4736030189f0703ec833318e5a370ee09e8b",
+    "src/SVNAssist.UI.Web/js/main.js": "85c66047b538720a3d09233a1fc58702e9c509e84e4706419b18025ef72c966d",
+    "tools/ui-audit/fixtures/changes.json": "0d574e6ebdb0ddf3024bdc97dbc478242fc0826aa492f412768c7d1559e06e39",
+    "tools/ui-audit/fixtures/log.json": "7c66f9c594885e66d180db3f7ecfaf205b26714b03df1ddbd96aec1c805b9e94",
+    "tools/ui-audit/fixtures/diff.json": "8cf8b9629ec688f5432bf74da9b774f27c02be5aa1b7b590624bf78f73de175f"
+  }
+}

@@ -6,6 +6,7 @@
     open(x, y, items, returnFocus) {
       U.menu.close();
       back = returnFocus || document.activeElement;
+      if (back?.getAttribute('aria-haspopup') === 'menu') back.setAttribute('aria-expanded', 'true');
       el = document.createElement('div'); el.className = 'menu'; el.setAttribute('role', 'menu');
       el.innerHTML = items.map((it, i) => it.sep ? '<hr role="separator">' : it.header ? `<div class="mh" role="presentation">${U.esc(it.label)}</div>` :
         `<button type="button" role="${it.checked != null ? 'menuitemradio' : 'menuitem'}" ${it.checked != null ? `aria-checked="${!!it.checked}"` : ''} data-i="${i}" ${it.disabled ? 'disabled' : ''} ${it.hint ? `title="${U.esc(it.hint)}"` : ''}>` +
@@ -17,7 +18,7 @@
       el.style.top = Math.max(2, Math.min(y, innerHeight - r.height - 2)) + 'px';
       const f = el.querySelector('button:not(:disabled)'); if (f) f.focus();
     },
-    close() { if (!el) return; el.remove(); el = null; if (back && back.isConnected) back.focus(); back = null; },
+    close() { if (!el) return; el.remove(); el = null; if (back && back.isConnected) { if (back.getAttribute('aria-haspopup') === 'menu') back.setAttribute('aria-expanded', 'false'); back.focus(); } back = null; },
     get isOpen() { return !!el; },
   };
   document.addEventListener('click', e => {

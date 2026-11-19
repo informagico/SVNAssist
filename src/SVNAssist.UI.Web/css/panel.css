@@ -290,6 +290,11 @@ html[data-view=diff] body,html[data-view=log] body,html[data-view=changes] body{
 .cf p{margin:0;line-height:1.45}
 .cf-t{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
 .cf-n,.cf-p{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cf>.cf-t .cf-n{white-space:normal;overflow-wrap:anywhere;flex:1 1 160px}
+.cf>.cf-p{white-space:normal;overflow-wrap:anywhere}
+.cfl-help{margin:0;padding:0 12px 10px;line-height:1.45;flex:none}
+.cfl-help summary{cursor:pointer}
+.cfl-help p{margin:6px 0 0}
 .cf-a{display:flex;gap:8px;flex-wrap:wrap}
 .cf-a .btn{padding:6px 14px}
 .cf-g{background:var(--bg2)}
@@ -297,6 +302,8 @@ html[data-view=diff] body,html[data-view=log] body,html[data-view=changes] body{
 .cf-s{display:flex;align-items:center;gap:10px;padding:6px 10px;border-bottom:1px solid var(--bd);min-width:0}
 .cf-s:last-child{border-bottom:0}
 .cf-f code{background:var(--bg1);border:1px solid var(--bd);border-radius:3px;padding:0 4px;font-family:var(--mono)}
+.cf-f summary{cursor:pointer;line-height:1.45}
+.cf-f code{overflow-wrap:anywhere;white-space:normal}
 
 /* selettore Switch/Merge: gruppi, vista estesa a tabella con lista virtuale */
 .sw-g{flex:none;padding:4px 8px 2px;font-size:.88em;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bd)}

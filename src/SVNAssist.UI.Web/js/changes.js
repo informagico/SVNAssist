@@ -96,6 +96,7 @@
   // i file di appoggio di svn (da svn info: .mine, .rNN, .merge-left/right, .working), che non compaiono tra i non versionati.
   // Stato solo-UI: riquadro aperto/chiuso e, dentro, l'elenco dei conflitti ad albero (chiuso: di solito si risolvono tutti insieme).
   let cflOpen = true, cflTreeOpen = false;
+  const cflDetails = new Set();
   function conflictsHTML(s, ui) {
     const c = s.conflicts || []; if (!c.length) return '';
     const u = Object.assign({ open: cflOpen, treeOpen: cflTreeOpen }, ui), off = s.loading ? 'disabled' : '';
@@ -103,16 +104,13 @@
       const A = (cls, label, icon, op, tip) => U.btn('btn' + cls, label, icon, 'conflictOp', { op, key: f.key }, tip, off);
       const tree = f.kind === 'tree', text = f.kind === 'text';
       const kind = tree ? t('Conflitto ad albero') : f.kind === 'property' ? t('Conflitto sulle proprietà') : t('Conflitto di testo');
-      return `<li class="cf" tabindex="0" data-cfkey="${esc(f.key)}"><div class="cf-t">${U.icon('warn')}<b class="cf-n" title="${esc(f.path)}">${esc(f.name)}</b><span class="chip">${esc(kind)}</span>${f.path !== f.name ? `<span class="muted small cf-p" title="${esc(f.path)}">${esc(f.path)}</span>` : ''}</div>` +
+      return `<li class="cf" tabindex="0" data-cfkey="${esc(f.key)}"><div class="cf-t">${U.icon('warn')}<b class="cf-n" title="${esc(f.path)}">${esc(f.name)}</b><span class="chip">${esc(kind)}</span><span class="muted small">${t('Da risolvere')}</span></div>` +
+        (f.path !== f.name ? `<div class="muted small cf-p">${esc(f.path)}</div>` : '') +
         (tree ? `<p class="muted">${t('Rinomina o cancellazione in conflitto: non ci sono versioni da scegliere. Sistema la struttura a mano, poi segna il conflitto come risolto.')}</p>` : '') +
         `<div class="cf-a">` +
         (text ? A(' primary', t('Apri editor di merge'), 'diff', 'edit', t('Apre un editor a 3 vie (base, mia, loro) con il risultato; salva, poi segna come risolto')) : '') +
-        (tree ? '' : A('', t('Usa la mia'), null, 'mine', t('Tiene la tua versione dell\'intero file e scarta le modifiche del server (resolve --accept mine-full)')) +
-          A('', t('Usa la loro'), null, 'theirs', t('Prende la versione del server dell\'intero file e scarta le tue modifiche (resolve --accept theirs-full)'))) +
-        (text ? A('', t('Usa entrambe (mia poi loro)'), null, 'bothMT', t('Tiene entrambi i lati di ogni blocco in conflitto, prima il tuo poi quello del server, e segna come risolto (resolve --accept working). Il resto del file resta invariato: controllalo prima di committare')) +
-          A('', t('Usa entrambe (loro poi mia)'), null, 'bothTM', t('Tiene entrambi i lati di ogni blocco in conflitto, prima quello del server poi il tuo, e segna come risolto (resolve --accept working). Il resto del file resta invariato: controllalo prima di committare')) : '') +
-        A('', t('Segna come risolto'), 'check', 'resolved', tree ? t('Conferma di aver sistemato la struttura (resolve)') : t('Dopo aver sistemato il file a mano: segna il conflitto come risolto (resolve --accept working)')) + `</div>` +
-        (f.files && f.files.length ? `<p class="cf-f muted small">${t('File di appoggio di svn (spariscono dopo il resolve):')} ${f.files.map(x => `<code>${esc(x)}</code>`).join(' ')}</p>` : '') + `</li>`;
+        `<button type="button" class="btn" data-cf-resolve aria-haspopup="menu" aria-expanded="false" aria-label="${esc(t('Risolvi il conflitto in {0}', f.path))}" ${off}><span>${t('Risolvi conflitto…')}</span>${U.icon('chev-d')}</button></div>` +
+        (f.files && f.files.length ? `<details class="cf-f muted small" data-cf-details="${esc(f.key)}"${cflDetails.has(f.key) ? ' open' : ''}><summary>${t('File di appoggio di svn (spariscono dopo il resolve):')}</summary>${f.files.map(x => `<code>${esc(x)}</code>`).join(' ')}</details>` : '') + `</li>`;
     };
     const trees = c.filter(f => f.kind === 'tree'), others = c.filter(f => f.kind !== 'tree');
     // gruppo "Conflitti ad albero": spiegazione, un solo pulsante per segnarli tutti risolti, elenco espandibile con il pulsante per ogni voce
@@ -122,13 +120,9 @@
       `<div class="cf-a">${U.btn('btn primary', t('Segna tutti come risolti'), 'check', 'resolveTreeConflicts', null, t('Conferma con l\'elenco, poi resolve --accept working su ognuno; un errore su uno non ferma gli altri'), off)}</div>` +
       (u.treeOpen ? `<ul class="cfl-l cf-sub">${trees.map(f => `<li class="cf-s"><b class="cf-n" title="${esc(f.path)}">${esc(f.name)}</b>${f.path !== f.name ? `<span class="muted small cf-p" title="${esc(f.path)}">${esc(f.path)}</span>` : ''}<span class="fill"></span>${U.btn('btn sm', t('Segna come risolto'), 'check', 'conflictOp', { op: 'resolved', key: f.key }, t('Conferma di aver sistemato la struttura (resolve)'), off)}</li>`).join('')}</ul>` : '') + `</li>`;
     const texts = c.filter(f => f.kind === 'text').length;
-    const bulk = texts < 2 ? '' : `<li class="cf cf-g"><div class="cf-t">${U.icon('warn')}<b>${t('Tutti i conflitti di testo ({0})', texts)}</b></div><div class="cf-a">` +
-      U.btn('btn', t('Usa la mia per tutti'), null, 'resolveAllConflicts', { op: 'mine' }, t('Tiene la tua versione in tutti i conflitti di testo, con conferma (resolve --accept mine-full); ad albero e proprietà esclusi'), off) +
-      U.btn('btn', t('Usa la loro per tutti'), null, 'resolveAllConflicts', { op: 'theirs' }, t('Prende la versione del server in tutti i conflitti di testo, con conferma (resolve --accept theirs-full); ad albero e proprietà esclusi'), off) +
-      U.btn('btn', t('Usa entrambe per tutti (mia poi loro)'), null, 'resolveAllConflicts', { op: 'bothMT' }, t('In tutti i conflitti di testo tiene entrambi i lati, prima il tuo poi quello del server, con conferma; i file senza marcatori ben formati restano com\'è; ad albero e proprietà esclusi'), off) +
-      U.btn('btn', t('Usa entrambe per tutti (loro poi mia)'), null, 'resolveAllConflicts', { op: 'bothTM' }, t('In tutti i conflitti di testo tiene entrambi i lati, prima quello del server poi il tuo, con conferma; i file senza marcatori ben formati restano com\'è; ad albero e proprietà esclusi'), off) + `</div></li>`;
-    return `<section class="cfl" aria-label="${esc(t('Conflitti'))}"><div class="cfl-h"><button type="button" class="ib" data-cfl-toggle aria-expanded="${!!u.open}" title="${esc(u.open ? t('Comprimi il riquadro dei conflitti') : t('Espandi il riquadro dei conflitti'))}" aria-label="${esc(u.open ? t('Comprimi il riquadro dei conflitti') : t('Espandi il riquadro dei conflitti'))}">${U.icon(u.open ? 'chev-d' : 'chev-r')}</button>${U.icon('warn')}<b>${t('Conflitti')}</b><span class="pill">${c.length}</span><span class="muted cfl-n">${t('Svn non committa file in conflitto: risolvili qui.')}</span></div>` +
-      (u.open ? `<ul class="cfl-l">${bulk}${others.map(one).join('')}${group}</ul>` : '') + `</section>`;
+    const bulk = texts < 2 ? '' : `<li class="cf cf-g"><div class="cf-t">${U.icon('warn')}<b>${t('Tutti i conflitti di testo ({0})', texts)}</b></div><div class="cf-a"><button type="button" class="btn" data-cf-bulk aria-haspopup="menu" aria-expanded="false" ${off}>${U.icon('chev-d')}<span>${t('Risolvi i conflitti di testo…')}</span></button></div></li>`;
+    return `<section class="cfl" aria-label="${esc(t('Conflitti'))}"><div class="cfl-h"><button type="button" class="ib" data-cfl-toggle aria-expanded="${!!u.open}" title="${esc(u.open ? t('Comprimi il riquadro dei conflitti') : t('Espandi il riquadro dei conflitti'))}" aria-label="${esc(u.open ? t('Comprimi il riquadro dei conflitti') : t('Espandi il riquadro dei conflitti'))}">${U.icon(u.open ? 'chev-d' : 'chev-r')}</button>${U.icon('warn')}<b>${t('Conflitti')}</b><span class="pill">${c.length}</span></div>` +
+      (u.open ? `<details class="cfl-help muted small" data-cf-details="guide"${cflDetails.has('guide') ? ' open' : ''}><summary>${t('Guida alle versioni')}</summary><p>${t('Locale = la tua working copy. In arrivo = le modifiche da integrare. Salva il risultato, poi segna come risolto.')}</p><p>${t('Svn non committa file in conflitto: risolvili qui.')}</p></details><ul class="cfl-l">${others.map(one).join('')}${group}${bulk}</ul>` : '') + `</section>`;
   }
   // Sezione "Shelved (n)" sotto l'elenco: chiusa di default, solo se ci sono shelve; tasto destro su una riga = Unshelve, Applica e tieni, Salva come .patch, Elimina.
   let shlOpen = false;
@@ -264,6 +258,19 @@
       tree ? null : { label: t('Mostra differenze'), cmd: 'showDiff', args: { key } },
       { label: t('Apri in Esplora file'), cmd: 'revealInExplorer', args: { key } },
       { label: t('Copia percorso'), run: () => copyText(fullPathOf(key)) }].filter(Boolean);
+  }
+  // Reuse the context menu's payloads and kind restrictions for the visible action menu.
+  function conflictResolveMenu(key, kind) {
+    return conflictMenu(key, kind).filter(i => i.cmd === 'conflictOp' && i.args.op !== 'edit');
+  }
+  function conflictBulkMenu() {
+    const action = (op, label, hint) => ({ label, hint, cmd: 'resolveAllConflicts', args: { op } });
+    return [
+      action('mine', t('Usa la mia per tutti'), t('Tiene la tua versione in tutti i conflitti di testo, con conferma (resolve --accept mine-full); ad albero e proprietà esclusi')),
+      action('theirs', t('Usa la loro per tutti'), t('Prende la versione del server in tutti i conflitti di testo, con conferma (resolve --accept theirs-full); ad albero e proprietà esclusi')),
+      action('bothMT', t('Usa entrambe per tutti (mia poi loro)'), t('In tutti i conflitti di testo tiene entrambi i lati, prima il tuo poi quello del server, con conferma; i file senza marcatori ben formati restano com\'è; ad albero e proprietà esclusi')),
+      action('bothTM', t('Usa entrambe per tutti (loro poi mia)'), t('In tutti i conflitti di testo tiene entrambi i lati, prima quello del server poi il tuo, con conferma; i file senza marcatori ben formati restano com\'è; ad albero e proprietà esclusi')),
+    ];
   }
   // menu della riga di sezione (Changes / Staged / Non versionati): SVN Revert di tutto dove ci sono modifiche annullabili
   function sectionMenu(sec, key, s) {
@@ -592,7 +599,7 @@
     else if (!e.shiftKey && (a === last || !box.contains(a))) { e.preventDefault(); first.focus(); }
   }
 
-  U.changesHTML = { aiStat, conflictMenu, fullPathOf, sectionMenu, multiMenu, header, commitBar, foot, revHTML, switchHTML, mergeBanner, conflictsHTML, shelvedHTML, revIndicator, statusKind, OK_TTL, recentHTML, recentChoose, msgSync, trackStatus, listHTML };   // parti pure, provate senza DOM (tests/ui-web)
+  U.changesHTML = { aiStat, conflictMenu, conflictResolveMenu, conflictBulkMenu, fullPathOf, sectionMenu, multiMenu, header, commitBar, foot, revHTML, switchHTML, mergeBanner, conflictsHTML, shelvedHTML, revIndicator, statusKind, OK_TTL, recentHTML, recentChoose, msgSync, trackStatus, listHTML };   // parti pure, provate senza DOM (tests/ui-web)
 
   U.views.changes = {
     mount(root) {
@@ -625,6 +632,17 @@
       });
       root.addEventListener('click', e => { if (e.target.closest('[data-shl-toggle]')) { shlOpen = !shlOpen; render(); const b = root.querySelector('[data-shl-toggle]'); if (b) b.focus(); } });
       const cflMenu = (li, x, y) => U.menu.open(x, y, conflictMenu(li.dataset.cfkey, (st.conflicts || []).find(f => f.key === li.dataset.cfkey)?.kind || 'text'), li);
+      root.addEventListener('toggle', e => {
+        const key = e.target.dataset?.cfDetails;
+        if (key) { if (e.target.open) cflDetails.add(key); else cflDetails.delete(key); }
+      }, true);
+      root.addEventListener('click', e => {
+        const b = e.target.closest('[data-cf-resolve],[data-cf-bulk]'); if (!b || b.disabled) return;
+        const li = b.closest('[data-cfkey]'), f = li && (st.conflicts || []).find(f => f.key === li.dataset.cfkey);
+        if (li && !f) return;
+        const r = b.getBoundingClientRect();
+        U.menu.open(r.left, r.bottom + 2, f ? conflictResolveMenu(f.key, f.kind) : conflictBulkMenu(), b);
+      });
       root.addEventListener('contextmenu', e => { const li = e.target.closest('li.cf[data-cfkey]'); if (li) { e.preventDefault(); cflMenu(li, e.clientX, e.clientY); } });
       root.addEventListener('keydown', e => {   // tasto Menu / Maiusc+F10 sul blocco di un conflitto
         const li = e.target.closest && e.target.closest('li.cf[data-cfkey]'); if (!li || e.target !== li || !(e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey))) return;
@@ -684,7 +702,12 @@
       fl.addEventListener('keydown', e => { if (e.key === 'Escape' && fl.value) { e.preventDefault(); fl.value = filter = ''; render(); } else if (e.key === 'ArrowDown') { e.preventDefault(); const r = root.querySelector('#list .tr[tabindex="0"]'); if (r) r.focus(); } });
       U.bindTree(root.querySelector('#list'), { rowMenu });
     },
-    update(root, state) { st = state; render(); },
+    update(root, state) {
+      // A menu must not retain actions for a conflict that changed or became busy.
+      if ((state.loading || JSON.stringify(state.conflicts) !== JSON.stringify(st?.conflicts)) &&
+          root.querySelector('[data-cf-resolve][aria-expanded="true"],[data-cf-bulk][aria-expanded="true"]')) U.menu.close();
+      st = state; render();
+    },
     // testi statici dello scheletro (attributi): da rifare a ogni cambio di lingua
     relang(root) {
       const set = (sel, attrs) => { const e = root.querySelector(sel); if (e) for (const k in attrs) e.setAttribute(k, attrs[k]); };

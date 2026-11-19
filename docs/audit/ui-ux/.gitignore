@@ -1,0 +1,8 @@
+# Native captures and machine-specific evidence stay on this computer.
+/native/
+/native-environment.json
+/batch-*/environment.json
+/batch-*/*.png
+/batch-*/*.jpg
+/batch-*/*.jpeg
+/local/

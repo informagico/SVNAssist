@@ -16,16 +16,19 @@ test('senza conflitti niente sezione (anche con "conflicts" assente)', () => {
   assert.equal(U.changesHTML.conflictsHTML(state()), '');
 });
 
-test('conflitto di testo: 4 azioni esplicite con comandi validi, file di appoggio sotto il file', () => {
+test('Text conflict keeps the editor visible and exposes valid resolution commands through its menu', () => {
   const h = U.changesHTML.conflictsHTML(state(C()));
   assert.match(h, /<section class="cfl"[^>]*aria-label="Conflitti"/); assert.match(h, /<b>Conflitti<\/b><span class="pill">1<\/span>/);
-  for (const l of ['Apri editor di merge', 'Usa la mia', 'Usa la loro', 'Segna come risolto']) assert.match(h, new RegExp('<span>' + l + '</span>'));
-  const a = args(h);
+  for (const l of ['Apri editor di merge', 'Risolvi conflitto…']) assert.match(h, new RegExp('<span>' + l + '</span>'));
+  assert.match(h, /data-cf-resolve aria-haspopup="menu" aria-expanded="false" aria-label="Risolvi il conflitto in README.txt"/);
+  assert.doesNotMatch(h, /data-cmd="conflictOp"[^>]*&quot;op&quot;:&quot;mine&quot;/);
+  const a = [...args(h), ...U.changesHTML.conflictResolveMenu('changes:README.txt', 'text').map(i => ({ name: i.cmd, args: i.args }))];
   assert.deepEqual(a.map(c => c.args.op), ['edit', 'mine', 'theirs', 'bothMT', 'bothTM', 'resolved']);
   a.forEach(c => { assert.equal(c.name, 'conflictOp'); assert.equal(c.args.key, 'changes:README.txt'); assert.deepEqual(validate(cmds, c), [], c.args.op); });
   assert.match(h, /File di appoggio di svn \(spariscono dopo il resolve\)/);
   assert.deepEqual([...h.matchAll(/<code>([^<]+)<\/code>/g)].map(m => m[1]), ['README.txt.merge-left.r3', 'README.txt.merge-right.r6', 'README.txt.working']);
   assert.match(h, /Conflitto di testo/);
+  assert.match(h, /<details[^>]*data-cf-details="changes:README.txt"><summary>/);
 });
 
 test('conflitto ad albero: solo spiegazione e "Segna come risolto"; sulle proprieta niente editor', () => {
@@ -33,7 +36,8 @@ test('conflitto ad albero: solo spiegazione e "Segna come risolto"; sulle propri
   assert.deepEqual(args(t).map(c => c.args.op), [undefined, 'resolved'], 'gruppo (Segna tutti) + la voce');
   assert.match(t, /Conflitti ad albero \(1\)/); assert.match(t, /non ci sono versioni da scegliere/); assert.doesNotMatch(t, /File di appoggio/);
   const p = U.changesHTML.conflictsHTML(state(C({ kind: 'property' })));
-  assert.deepEqual(args(p).map(c => c.args.op), ['mine', 'theirs', 'resolved']);
+  assert.deepEqual(args(p), []);
+  assert.deepEqual(Array.from(U.changesHTML.conflictResolveMenu('changes:README.txt', 'property'), c => c.args.op), ['mine', 'theirs', 'resolved']);
 });
 
 test('conflitti: nomi neutralizzati, percorso mostrato se diverso dal nome, pulsanti fermi durante il caricamento, inglese', () => {
@@ -46,7 +50,10 @@ test('conflitti: nomi neutralizzati, percorso mostrato se diverso dal nome, puls
   U.setLang('en');
   try {
     const e = U.changesHTML.conflictsHTML(state(C()));
-    for (const l of ['Open merge editor', 'Use mine', 'Use theirs', 'Mark as resolved', 'Conflicts']) assert.match(e, new RegExp(l));
+    for (const l of ['Open merge editor', 'Resolve conflict', 'Unresolved', 'Local = your working copy', 'Conflicts']) assert.match(e, new RegExp(l));
+    const menu = U.changesHTML.conflictResolveMenu('changes:README.txt', 'text');
+    assert.ok(menu.some(i => i.label === 'Use local version' && i.args.op === 'mine'));
+    assert.ok(menu.some(i => i.label === 'Use incoming version' && i.args.op === 'theirs'));
   } finally { U.setLang('it'); }
 });
 
@@ -115,11 +122,11 @@ test('tree conflict raggruppati: un gruppo con spiegazione e "Segna tutti come r
   const s = state(C(), ...trees), h = U.changesHTML.conflictsHTML(s);
   assert.match(h, /<b>Conflitti<\/b><span class="pill">3<\/span>/);
   assert.match(h, /Conflitti ad albero \(2\)/); assert.match(h, /non ci sono versioni da scegliere/); assert.match(h, /<span>Segna tutti come risolti<\/span>/);
-  const a = args(h); assert.deepEqual(a.map(c => c.name === 'conflictOp' ? c.args.op : c.name), ['edit', 'mine', 'theirs', 'bothMT', 'bothTM', 'resolved', 'resolveTreeConflicts'], 'a elenco chiuso: solo il testo e il pulsante di gruppo');
+  const a = args(h); assert.deepEqual(a.map(c => c.name === 'conflictOp' ? c.args.op : c.name), ['edit', 'resolveTreeConflicts']);
   a.forEach(c => assert.deepEqual(validate(cmds, c), []));
   assert.doesNotMatch(h, /Conflitto ad albero<\/span>/, 'le voci ad albero non hanno il riquadro singolo');
   const open = U.changesHTML.conflictsHTML(s, { open: true, treeOpen: true });
-  assert.deepEqual(args(open).filter(c => c.name === 'conflictOp' && c.args.op === 'resolved').map(c => c.args.key), ['changes:README.txt', 'changes:a.cs', 'changes:b.cs']);
+  assert.deepEqual(args(open).filter(c => c.name === 'conflictOp' && c.args.op === 'resolved').map(c => c.args.key), ['changes:a.cs', 'changes:b.cs']);
   assert.match(open, /data-cfl-tree[^>]*aria-expanded="true"/); assert.match(open, /Nascondi elenco/);
   assert.match(open, /<b class="cf-n" title="Core\/a.cs">a.cs<\/b>/);
   const closed = U.changesHTML.conflictsHTML(s, { open: false });

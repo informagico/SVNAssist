@@ -83,7 +83,7 @@ namespace SVNAssist.Host
             if (frame.GetProperty((int)__VSFPROPID7.VSFPROPID_InfoBarHost, out var h) != VSConstants.S_OK || !(h is IVsInfoBarHost host)) return;
 
             var model = new InfoBarModel(
-                new IVsInfoBarTextSpan[] { new InfoBarTextSpan(Loc.T("File in conflitto: scegli come risolverlo.")) },
+                new IVsInfoBarTextSpan[] { new InfoBarTextSpan(Loc.T("File in conflitto. Locale = la tua working copy; in arrivo = le modifiche da integrare. Salva il risultato, poi segna come risolto.")) },
                 new IVsInfoBarActionItem[]
                 {
                     new InfoBarButton(Loc.T("Segna come risolto")),

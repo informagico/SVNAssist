@@ -92,4 +92,28 @@ public sealed class UiAuditRegressionTests : IDisposable
         Assert.False(await dialogs.ConfirmAsync("Fixture-only confirmation", Loc.T("Annulla modifiche"), CancellationToken.None));
         Assert.Equal(new[] { action, cancel }, Assert.Single(host.Prompts).Buttons);
     }
+
+    [Theory]
+    [InlineData("mine", "Use local version", SvnConflictChoice.MineFull, 0)]
+    [InlineData("theirs", "Use incoming version", SvnConflictChoice.TheirsFull, 0)]
+    [InlineData("mine", "Use local version", SvnConflictChoice.MineFull, 1)]
+    [InlineData("theirs", "Use incoming version", SvnConflictChoice.TheirsFull, -1)]
+    public async Task ConflictActionsKeepTheirSvnChoiceAndExplicitConfirmation(string op, string label, SvnConflictChoice choice, int answer)
+    {
+        Loc.Lang = "en";
+        var host = new FakeHost { DefaultAnswer = answer };
+        var svn = new FakeSvnService();
+        svn.Statuses.Add(new SvnFileStatus("audit.cs", SvnStatusKind.Conflicted));
+        using var server = Server(host, new StubSettings { UiLanguage = "en" }, svn);
+        server.Changes.WorkingCopyPath = Path.Combine(Path.GetTempPath(), "SVNAssist_Audit_Fake");
+        await server.Changes.RefreshAsync(CancellationToken.None);
+        using var args = JsonDocument.Parse(JsonSerializer.Serialize(new { op, key = "changes:audit.cs" }));
+        await server.Changes.DispatchAsync("conflictOp", args.RootElement, CancellationToken.None);
+
+        var prompt = Assert.Single(host.Prompts);
+        Assert.Contains("audit.cs", prompt.Message);
+        Assert.Equal(new[] { label, "Cancel" }, prompt.Buttons);
+        if (answer == 0) Assert.Equal(choice, Assert.Single(svn.Resolved).Choice);
+        else Assert.Empty(svn.Resolved);
+    }
 }

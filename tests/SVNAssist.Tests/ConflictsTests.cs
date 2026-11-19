@@ -366,6 +366,9 @@ public class ConflictsTests
         Assert.Equal(new MergeEditorFiles(Path.Combine(Wc, "README.txt.merge-left.r2"), Path.Combine(Wc, "README.txt.working"),
             Path.Combine(Wc, "README.txt.merge-right.r5"), Path.Combine(Wc, "README.txt")), launched);
         Assert.Contains("vsDiffMerge", f.Snap.Status.Msg);
+        Assert.Contains("Locale: README.txt.working.", f.Snap.Status.Msg);
+        Assert.Contains("In arrivo: README.txt.merge-right.r5.", f.Snap.Status.Msg);
+        Assert.Contains("Risultato: README.txt.", f.Snap.Status.Msg);
         Assert.Empty(f.Host.OpenedFiles);
         Assert.Empty(f.Svn.Resolved);   // l'editor non risolve: serve "Segna come risolto"
     }

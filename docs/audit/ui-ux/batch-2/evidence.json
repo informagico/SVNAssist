@@ -1,0 +1,85 @@
+{
+  "baselineCommit": "739f7c0468a66d4b06b32d6fe32b2f7578606f2e",
+  "packageSha256": "3E3042C0E93E87D8EA74BFBBECEC25D8FD885D314EA6340FE15CDCB1EB55EB39",
+  "nativeVerification": "Pending; updated package built but not installed or exercised in the IDE",
+  "capturedAt": "2026-11-19T21:02:11.759Z",
+  "profiles": [
+    {
+      "scenario": "conflicts",
+      "theme": "dark",
+      "lang": "en",
+      "width": 480,
+      "height": 900,
+      "screenshot": "screenshots/conflicts-dark-en-480x900.png",
+      "ready": true,
+      "errors": [],
+      "commands": [],
+      "language": "en",
+      "bodyOverflow": false,
+      "modalOutsideViewport": false,
+      "modalBackgroundInert": null,
+      "focusInsideModal": null,
+      "unnamedControls": [],
+      "textLength": 808,
+      "behaviorChecks": [
+        "Conflicts: compact actions, keyboard selection, Escape/focus, exact SVN payloads, property restrictions, details persistence, busy menu closure and bulk actions"
+      ]
+    },
+    {
+      "scenario": "conflicts",
+      "theme": "light",
+      "lang": "en",
+      "width": 360,
+      "height": 600,
+      "screenshot": "screenshots/conflicts-light-en-360x600.png",
+      "ready": true,
+      "errors": [],
+      "commands": [],
+      "language": "en",
+      "bodyOverflow": false,
+      "modalOutsideViewport": false,
+      "modalBackgroundInert": null,
+      "focusInsideModal": null,
+      "unnamedControls": [],
+      "textLength": 808,
+      "behaviorChecks": [
+        "Conflicts: compact actions, keyboard selection, Escape/focus, exact SVN payloads, property restrictions, details persistence, busy menu closure and bulk actions"
+      ]
+    },
+    {
+      "scenario": "conflicts",
+      "theme": "blue",
+      "lang": "en",
+      "width": 800,
+      "height": 900,
+      "screenshot": "screenshots/conflicts-blue-en-800x900.png",
+      "ready": true,
+      "errors": [],
+      "commands": [],
+      "language": "en",
+      "bodyOverflow": false,
+      "modalOutsideViewport": false,
+      "modalBackgroundInert": null,
+      "focusInsideModal": null,
+      "unnamedControls": [],
+      "textLength": 808,
+      "behaviorChecks": [
+        "Conflicts: compact actions, keyboard selection, Escape/focus, exact SVN payloads, property restrictions, details persistence, busy menu closure and bulk actions"
+      ]
+    }
+  ],
+  "sourceHashes": {
+    "docs/demo/svnassist-demo.html": "E4475560116FFA90377FE1A5CBDBD03F1B0930F7024BA8FCA87F096CC0785F7B",
+    "src/SVNAssist.Backend/Stores/ChangesStore.cs": "B7475D443B259471254F5E4EE73098905972E3D9BF6FEA0E6BFAA365036BBACB",
+    "src/SVNAssist.Host/ConflictInfoBar.cs": "520C73220928DC32904F94F31B6B2A8C9A9FAEE89854D227163658D7A3786A51",
+    "src/SVNAssist.UI.Web/css/panel.css": "0749A03360683AB62976A0FDB43EB707FD3B378B728140419CE6F43A452C8247",
+    "src/SVNAssist.UI.Web/js/changes.js": "C0D3BFD0087F5CBEF862CE039F709938BD5A3E421F4EBC5EA315937FA553A911",
+    "src/SVNAssist.UI.Web/js/ctxmenu.js": "94CE24C92D4671E7618B047B74D72689FF11F54A25663557B27222F6DD4448F4",
+    "src/SVNAssist.UI.Web/js/i18n.js": "885D1874DEE9916FA66BE7ACD223761DA3795159CAE751700C90D197B49E7512",
+    "src/Shared/LocEn.cs": "A3ED457B64E1B7D079D2BB4FDE327A8FF53C819AC477202B115F1497E2D78052",
+    "tests/SVNAssist.Tests/ConflictsTests.cs": "8F87066118AB5E42A8032B41E72E2E4969ED5FF0B787DBFFA1B108014C43D74F",
+    "tests/SVNAssist.Tests/UiAuditRegressionTests.cs": "178013291B3C9D73005A3F7437821809383C176DEAD3008B84C086FD3731D68E",
+    "tests/ui-web/conflicts.test.mjs": "2330F7BFDC881E4079D627151D37F44C78F4FFFF0F32A80ED3B00A55F59EBD59",
+    "tools/capture-ui-audit.mjs": "D97FC8EB9277256ED514224FA861634975D9DBF1E4C8A4F76CC774835C882ABC"
+  }
+}

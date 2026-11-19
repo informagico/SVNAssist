@@ -3002,11 +3002,11 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
                 await OpenMergeEditorAsync(entry);
                 break;
             case "mine":
-                if (await _dialogs.ConfirmAsync(Loc.T("Tenere la TUA versione di \"{0}\"? Le modifiche arrivate dal server su questo file vengono scartate.", entry.RelativePath), ct))
+                if (await _dialogs.ConfirmAsync(Loc.T("Tenere la TUA versione di \"{0}\"? Le modifiche arrivate dal server su questo file vengono scartate.", entry.RelativePath), Loc.T("Usa la mia"), ct))
                     await ApplyResolveAsync(entry, SvnConflictChoice.MineFull, ct);
                 break;
             case "theirs":
-                if (await _dialogs.ConfirmAsync(Loc.T("Prendere la versione LORO (del server) di \"{0}\"? Le TUE modifiche locali su questo file vengono scartate.", entry.RelativePath), ct))
+                if (await _dialogs.ConfirmAsync(Loc.T("Prendere la versione LORO (del server) di \"{0}\"? Le TUE modifiche locali su questo file vengono scartate.", entry.RelativePath), Loc.T("Usa la loro"), ct))
                     await ApplyResolveAsync(entry, SvnConflictChoice.TheirsFull, ct);
                 break;
             case "bothMT":
@@ -3187,7 +3187,8 @@ internal sealed partial class ChangesStore : ViewStore, IDisposable
             _conflictInfo.TryGetValue(entry.FullPath, out info);
         if (info is { Type: "text", Base: { } b, Mine: { } m, Theirs: { } t } && MergeEditorLauncher(new MergeEditorFiles(b, m, t, entry.FullPath)) is { } editor)
         {
-            SetStatus(Loc.T("Editor di merge aperto ({0}): salva il risultato, poi premi \"Segna come risolto\".", editor));
+            SetStatus(Loc.T("Editor di merge aperto ({0}). Locale: {1}. In arrivo: {2}. Risultato: {3}. Salva il risultato, poi premi \"Segna come risolto\".",
+                editor, Path.GetFileName(m), Path.GetFileName(t), entry.RelativePath));
             return;
         }
 

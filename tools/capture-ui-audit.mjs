@@ -26,7 +26,7 @@ try {
       page.on('pageerror', onError);
       await page.goto('about:blank');
       await page.goto(pathToFileURL(fileURLToPath(new URL('index.html', out))).href + '#' + new URLSearchParams({ scene: scenario.id, ...profile }));
-      try { await page.waitForFunction(() => document.querySelector('#stage iframe')?.contentWindow.__auditReady, null, { timeout: 5000 }); } catch { errors.push('Scenarioso not ready within 5 seconds'); }
+      try { await page.waitForFunction(() => document.querySelector('#stage iframe')?.contentWindow.__auditReady, null, { timeout: 5000 }); } catch { errors.push('Scenario not ready within 5 seconds'); }
       const frame = await (await page.locator('#stage iframe').elementHandle()).contentFrame();
       const diagnostics = await frame.evaluate(() => {
         const visible = e => !!(e.getClientRects().length && getComputedStyle(e).visibility !== 'hidden');
@@ -43,6 +43,64 @@ try {
       // Capture the actual view only, without the gallery navigation.
       await page.locator('#stage iframe').screenshot({ path: fileURLToPath(new URL(`screenshots/${name}.png`, out)), animations: 'disabled' });
       const behaviorChecks = [];
+      if (scenario.id === 'conflicts') {
+        try {
+          const text = frame.locator('.cf[data-cfkey]').first(), trigger = text.locator('[data-cf-resolve]');
+          assert.equal(await text.locator('.cf-a button').count(), 2);
+          await trigger.focus(); await trigger.press('Enter');
+          assert.equal(await trigger.getAttribute('aria-expanded'), 'true');
+          assert.equal(await frame.getByRole('menuitem').count(), 5);
+          assert.equal(await frame.evaluate(() => document.activeElement.textContent.trim()), 'Use local version');
+          await frame.getByRole('menu').press('Escape');
+          assert.equal(await trigger.getAttribute('aria-expanded'), 'false');
+          assert.equal(await trigger.evaluate(e => e === document.activeElement), true);
+          assert.equal(await frame.evaluate(() => window.__auditCommands.filter(c => c.name === 'conflictOp').length), 0);
+          await trigger.press('Enter'); await frame.getByRole('menu').press('ArrowDown');
+          await frame.locator('[role="menuitem"]:focus').press('Enter');
+          const command = await frame.evaluate(() => window.__auditCommands.find(c => c.name === 'conflictOp'));
+          assert.equal(command.args.op, 'theirs'); assert.equal(command.args.key, 'changes:src/File0.cs');
+          const property = frame.locator('.cf[data-cfkey]').nth(1);
+          assert.equal(await property.locator('[data-cmd="conflictOp"]').count(), 0);
+          await property.locator('[data-cf-resolve]').click();
+          assert.equal(await frame.getByRole('menuitem').count(), 3);
+          assert.equal(await frame.getByRole('menuitem', { name: /Use both|Open merge/ }).count(), 0);
+          await frame.getByRole('menu').press('Escape');
+          await text.locator('summary').click();
+          await frame.waitForFunction(() => document.querySelector('.cf[data-cfkey] [data-cf-details]').open);
+          await frame.evaluate(() => {
+            const s = structuredClone(window.__auditConfig.scenario.state); s.status.msg = 'Audit refresh';
+            window.__mockBridge.fn({ type: 'state', view: 'changes', state: s });
+          });
+          assert.equal(await text.locator('details').getAttribute('open'), '');
+          await trigger.click();
+          await frame.evaluate(() => {
+            const s = structuredClone(window.__auditConfig.scenario.state); s.loading = true;
+            window.__mockBridge.fn({ type: 'state', view: 'changes', state: s });
+          });
+          assert.equal(await frame.getByRole('menu').count(), 0);
+          assert.equal(await trigger.isDisabled(), true);
+          await frame.evaluate(() => {
+            const s = structuredClone(window.__auditConfig.scenario.state);
+            s.conflicts.push({ ...s.conflicts[0], key: 'changes:src/Other.cs', name: 'Other.cs', path: 'src/Other.cs' });
+            window.__mockBridge.fn({ type: 'state', view: 'changes', state: s });
+          });
+          await frame.locator('[data-cf-bulk]').click();
+          assert.equal(await frame.getByRole('menuitem').count(), 4);
+          await frame.getByRole('menuitem', { name: 'Use local version for all', exact: true }).click();
+          const bulk = await frame.evaluate(() => window.__auditCommands.find(c => c.name === 'resolveAllConflicts'));
+          assert.deepEqual(bulk.args, { op: 'mine' });
+          await frame.evaluate(() => {
+            const s = structuredClone(window.__auditConfig.scenario.state), f = s.conflicts[0];
+            f.path = 'src/' + 'VeryLongDirectory/'.repeat(12) + 'Report.cs'; f.name = 'Report.cs';
+            window.__mockBridge.fn({ type: 'state', view: 'changes', state: s });
+          });
+          assert.equal(await text.locator('.cf-p').evaluate(e => e.scrollWidth <= e.clientWidth + 1), true);
+          await frame.locator('[data-cfl-tree]').click();
+          assert.equal(await frame.locator('.cf-sub [data-cmd="conflictOp"]').count(), 1);
+          assert.equal(await frame.locator('.cf-sub [data-cf-resolve]').count(), 0);
+          behaviorChecks.push('Conflicts: compact actions, keyboard selection, Escape/focus, exact SVN payloads, property restrictions, details persistence, busy menu closure and bulk actions');
+        } catch (error) { errors.push('Conflict regression: ' + error.message); }
+      }
       if (scenario.id === 'shelve') {
         try {
           assert.equal(diagnostics.modalBackgroundInert, true);
